@@ -44,7 +44,7 @@ Thumbs.db
 data/raw_*.csv
 data/raw_*.json
 data/*.csv
-!data/processed_*.csv
+!data/processed_studies.csv
 
 # Logs
 *.log
