@@ -233,7 +233,7 @@ def clean_chart(fig):
         paper_bgcolor='rgba(0,0,0,0)',
         margin=dict(l=20, r=20, t=40, b=20),
     )
-    return st.plotly_chart(fig, use_container_width=True, config={'displayModeBar': False})
+    return st.plotly_chart(fig, width='stretch', config={'displayModeBar': False})
 
 # --- MAIN CONTENT ---
 st.markdown(f"""
