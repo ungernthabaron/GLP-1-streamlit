@@ -1,0 +1,225 @@
+﻿GLP-1 Rush: Стратегический анализ, архитектура данных и план реализации проекта по мониторингу рынка инкретинов
+1. Введение: Анатомия «Золотой лихорадки» в метаболической медицине
+Современная фармацевтическая индустрия переживает трансформацию, сравнимую по масштабу с появлением антибиотиков или статинов. Мы являемся свидетелями феномена, получившего название «GLP-1 Rush» (Гонка GLP-1) — беспрецедентной конкуренции за доминирование на рынке лечения ожирения и метаболических расстройств. Изначально разработанные для контроля гликемии при сахарном диабете 2 типа (СД2), агонисты рецепторов глюкагоноподобного пептида-1 (GLP-1) радикально изменили клиническую парадигму, переопределив ожирение как хроническое заболевание, поддающееся эффективной фармакологической коррекции.1
+Этот отчет представляет собой исчерпывающее руководство по реализации аналитического проекта, направленного на декомпозицию этого рынка. Цель проекта — не просто визуализировать данные, а создать сложный аналитический инструмент, способный отслеживать динамику клинических испытаний, смену терапевтических поколений и расширение показаний в реальном времени. Объем рынка, по прогнозам, достигнет сотен миллиардов долларов к 2030 году, а кумулятивная выручка от препаратов на основе семаглутида и тирзепатида может составить 470 миллиардов долларов, что почти вдвое превышает выручку от iPhone за первое десятилетие его существования.2
+В условиях, когда капитализация лидеров рынка — Novo Nordisk и Eli Lilly — достигает триллионных значений, а в спину им дышат десятки биотехнологических компаний, способность анализировать пайплайн (портфель разработок) становится критическим навыком. Реализация проекта «GLP-1 Rush» требует синергии глубокой предметной экспертизы и продвинутых навыков Data Science. От выбора правильного API для сбора данных до обоснования использования Python вместо Power BI для визуализации — каждое решение должно быть взвешенным и технически обоснованным.
+Ниже представлен детальный план и теоретическая база для создания портфолио-проекта мирового уровня, охватывающий биомедицинский контекст, архитектуру сбора данных через ClinicalTrials.gov API v2 и стратегию визуализации сложных многомерных данных.
+________________
+2. Ландшафт рынка GLP-1: От дуополии к мультимодальной конкуренции
+Для того чтобы аналитический дашборд был содержательным, разработчик должен понимать структуру рынка. Данные в этом сегменте неоднородны: они варьируются от коммерчески доступных блокбастеров до экспериментальных молекул на ранних стадиях.
+2.1. Гегемония лидеров: Novo Nordisk и Eli Lilly
+На текущий момент рынок характеризуется жесткой дуополией. Две компании фактически сформировали этот терапевтический класс и продолжают удерживать львиную долю рынка.
+Novo Nordisk выступает в роли первопроходца. Их препарат семаглутид, известный под брендами Ozempic (для диабета) и Wegovy (для ожирения), стал культурным феноменом. Однако компания сталкивается с вызовами: необходимость ежедневных или еженедельных инъекций и сложности с производственными мощностями открывают окно возможностей для конкурентов. Стратегия Novo Nordisk эволюционирует в сторону комбинированных препаратов, таких как CagriSema (семаглутид + кагрилинтид), и разработки оральных форм, таких как амикретин.3
+Eli Lilly является главным претендентом на перехват лидерства. Их молекула тирзепатид (Mounjaro, Zepbound) представляет собой следующий эволюционный шаг — это первый двойной агонист, воздействующий на рецепторы GLP-1 и GIP (глюкозозависимый инсулинотропный полипептид). Клинические испытания SURMOUNT показали, что тирзепатид обеспечивает более значительную потерю веса по сравнению с семаглутидом, что позволило компании захватить до 53% рынка ожирения в первом квартале 2025 года.4 Более того, Lilly активно продвигает «тройной агонист» ретатрутид, который называют «тяжелой артиллерией» в борьбе с морбидным ожирением.
+2.2. Классификация молекул и механизмы действия
+При проектировании модели данных для проекта критически важно правильно категоризировать исследуемые препараты. Простая группировка по названию компании не даст глубоких инсайтов. Необходимо внедрить классификацию по механизму действия (MOA).
+
+
+Тип молекулы
+	Механизм действия (MOA)
+	Ключевые представители
+	Статус и перспективы
+	GLP-1 Mono-agonist
+	Активация только рецепторов GLP-1. Стимулирует секрецию инсулина, подавляет глюкагон, замедляет опорожнение желудка.
+	Semaglutide (Wegovy), Liraglutide (Saxenda), Dulaglutide
+	«Золотой стандарт», но эффективность плато (~15% потери веса). Базовая терапия.
+	Dual Agonist (GLP-1/GIP)
+	Синергия GLP-1 и GIP. GIP усиливает инсулинотропный эффект и, предположительно, улучшает переносимость, снижая тошноту.
+	Tirzepatide (Zepbound)
+	Текущий лидер эффективности (~20-22% потери веса).
+	Triple Agonist ("Triple G")
+	GLP-1 + GIP + Glucagon (GCGR). Добавление глюкагона увеличивает расход энергии (сжигание жира) в печени.
+	Retatrutide (Eli Lilly)
+	Потенциал снижения веса >24%, сравним с бариатрией. Риски сердечно-сосудистых побочных эффектов. 5
+	Glucagon/GLP-1 Co-agonist
+	Баланс между контролем аппетита и сжиганием энергии. Акцент на лечение жировой болезни печени.
+	Survodutide (Zealand/Boehringer), Mazdutide
+	Высокая эффективность при MASH/NASH. 5
+	Amylin Combos
+	Комбинация GLP-1 с аналогом амилина. Амилин действует через другие пути ЦНС, усиливая чувство сытости.
+	CagriSema (Novo Nordisk)
+	Ожидается, что превзойдет тирзепатид в прямых сравнениях. 6
+	GIP Antagonist + GLP-1
+	Блокировка рецептора GIP при активации GLP-1. Уникальный подход, основанный на генетических данных.
+	MariTide (Amgen)
+	Потенциал для более редкого дозирования (раз в месяц) и лучшего удержания веса после отмены. 7
+	Oral Small Molecules
+	Непептидные агонисты, устойчивые в ЖКТ. Таблетированная форма.
+	Orforglipron (Lilly), Danuglipron (Pfizer), Structure’s GSBR-1290
+	«Святой Грааль» рынка — дешевое производство и удобство приема. 8
+	Аналитический инсайт: Визуализация должна показывать смещение фокуса индустрии от моно-препаратов (первое поколение) к сложным мультирецепторным молекулам. Это можно реализовать через цветовую кодировку в диаграммах.
+2.3. «Догоняющие»: Стратегии второго эшелона
+Помимо гигантов, на рынке присутствуют игроки, стремящиеся найти свою нишу через инновации или улучшение профиля безопасности.
+* Amgen: Их кандидат MariTide (AMG 133) использует парадоксальный механизм антагонизма к GIP. Это позволяет надеяться на пролонгированный эффект и режим дозирования раз в месяц, что станет значительным преимуществом перед еженедельными инъекциями конкурентов.1
+* Viking Therapeutics: Разрабатывает VK2735, двойной агонист, доступный как в инъекционной, так и в оральной форме, показывая многообещающие результаты в фазе 2.1
+* Zealand Pharma: В партнерстве с Boehringer Ingelheim фокусируется на сурводутиде, который позиционируется как лидер в лечении заболеваний печени (MASH).9
+* Pfizer и Roche: Активно пытаются войти в гонку через приобретения и разработку оральных малых молекул, стремясь занять нишу массового доступного лечения, где инъекционные препараты слишком дороги или неудобны.10
+________________
+3. Расширение горизонтов: GLP-1 за пределами ожирения
+Важнейшим аспектом анализа является "indication expansion" — расширение показаний. Проект должен отслеживать, как одна и та же молекула тестируется для лечения совершенно разных патологий. Это демонстрирует плейотропный эффект инкретинов.
+3.1. Метаболическая дисфункция печени (MASH/NASH)
+MASH (ранее NASH) — это «тихая эпидемия», ведущая к циррозу и раку печени. В августе 2025 года Wegovy стал первым GLP-1 препаратом, одобренным для лечения MASH.11 Однако настоящая битва разворачивается между сурводутидом и тирзепатидом, которые показывают способность не только снижать жир в печени, но и уменьшать фиброз.12 В проекте необходимо настроить фильтры для отслеживания ключевых слов: NASH, MASH, Liver Fibrosis.
+3.2. Нейродегенеративные заболевания
+Это, пожалуй, самое интригующее направление. Рецепторы GLP-1 широко представлены в мозге. Исследования показывают, что агонисты GLP-1 могут снижать нейровоспаление и улучшать утилизацию глюкозы нейронами.
+* Болезнь Альцгеймера: Novo Nordisk проводит масштабные фазы 3 (EVOKE и EVOKE Plus) с использованием семаглутида. Ретроспективные данные указывают на возможное снижение риска деменции на 45% у пациентов с диабетом, принимающих GLP-1.14
+* Болезнь Паркинсона: Исследования лираглутида и эксенатида показали потенциал в замедлении моторной деградации.16
+3.3. Сердечно-сосудистые и почечные заболевания
+В 2024-2025 годах семаглутид получил расширение показаний для снижения сердечно-сосудистых рисков (исследование SELECT) и лечения хронической болезни почек (исследование FLOW), показав снижение риска почечной недостаточности и смерти.17 Тирзепатид также получил одобрение для лечения апноэ сна.11
+________________
+4. Архитектура сбора данных: Работа с ClinicalTrials.gov API v2
+Сердцем проекта является автоматизированный пайплайн сбора данных. ClinicalTrials.gov полностью перешел на API v2, что делает старые методы (XML-парсинг, API v1) неактуальными. Новый API является RESTful сервисом, возвращающим данные в JSON.
+4.1. Спецификация API v2 и миграция
+Ключевое отличие API v2 — строгая структура запросов и изменение формата данных.
+* Endpoint: https://clinicaltrials.gov/api/v2/studies
+* Формат: JSON. Поля, ранее содержавшие форматированный текст ("legacy markup"), теперь используют CommonMark Markdown.18
+* Пагинация: Используется механизм pageToken. Ответ сервера содержит токен для следующей страницы, который необходимо передать в следующем запросе. Это критически важно для выгрузки полных датасетов (>1000 записей).19
+4.2. Конструирование сложных запросов (Query Engineering)
+Для охвата всего рынка GLP-1 недостаточно простого поиска. Необходимо использовать синтаксис Essie Expressions, поддерживаемый параметром query.term.
+Пример стратегии формирования запроса:
+Нам нужно найти исследования, связанные с конкретными молекулами ИЛИ механизмами, и отфильтровать их по статусу.
+1. Словарь терминов (Keywords):
+Формируем список всех коммерческих и химических названий:
+   * Semaglutide, Ozempic, Wegovy, Rybelsus
+   * Tirzepatide, Mounjaro, Zepbound
+   * Retatrutide, LY3437943
+   * CagriSema, Cagrilintide
+   * Survodutide, BI 456906
+   * Orforglipron, Danuglipron
+   * Общие термины: GLP-1 receptor agonist, Incretin mimetic
+   2. Синтаксис запроса:
+Используем оператор OR для объединения терминов. Параметр query.term будет выглядеть так:
+"Semaglutide OR Tirzepatide OR Retatrutide OR CagriSema OR..."
+Для более точного поиска можно использовать поля поиска AREA[InterventionName], чтобы исключить упоминания препаратов в разделе исключений (exclusion criteria).20
+   3. Фильтрация по показаниям:
+Для сегментации по болезням используем отдельные запросы или пост-фильтрацию:
+      * AREA[Condition]Obesity
+      * AREA[Condition]Alzheimer
+      * AREA[Condition]NASH
+4.3. Техническая реализация на Python (ETL Pipeline)
+Для реализации сбора данных необходимо написать скрипт на Python. Использование библиотеки requests является стандартом.
+Алгоритм скрипта:
+      1. Setup: Импорт библиотек (requests, pandas, json, time).
+      2. Base Query: Определение базового URL и параметров.
+Python
+base_url = "https://clinicaltrials.gov/api/v2/studies"
+params = {
+   "format": "json",
+   "pageSize": 1000,
+   "fields": "NCTId,BriefTitle,OfficialTitle,Phase,Condition,Intervention,OverallStatus,StartDate,PrimaryCompletionDate,Sponsor",
+   "query.term": "GLP-1 OR Semaglutide OR Tirzepatide" # Упрощенно
+}
+
+      3. Pagination Loop:
+         * Выполнить GET запрос.
+         * Проверить статус код (200).
+         * Распарсить JSON.
+         * Добавить исследования в список all_studies.
+         * Проверить наличие ключа nextPageToken. Если есть — обновить params и повторить цикл. Если нет — прервать (break).19
+         4. JSON Flattening:
+Полученные данные имеют вложенную структуру (nested dictionaries). Например, спонсор находится в protocolSection.identificationModule.organization.fullName. Необходимо написать функцию трансформации, которая извлекает значения из глубины JSON и переводит их в плоскую таблицу для DataFrame.19
+         5. Data Cleaning:
+            * Нормализация спонсоров: "Eli Lilly and Company", "Lilly", "Eli Lilly" -> "Eli Lilly".
+            * Классификация фаз: Объединение "Phase 1/Phase 2" в категорию "Phase 1/2" или разделение логики.
+            * Mapping: Создание колонки Mechanism на основе анализа текста в поле Intervention.
+________________
+5. Выбор инструментария визуализации: Битва титанов (Python vs Power BI)
+В корпоративной среде выбор часто падает на Power BI. Однако для задачи создания публичного портфолио и анализа сложных научных данных Python (в связке со Streamlit и Plotly) обладает неоспоримыми преимуществами.
+5.1. Power BI: Корпоративный стандарт с ограничениями
+Преимущества:
+            * Глубокая интеграция с экосистемой Microsoft.
+            * Низкий порог входа для простых дашбордов (Drag-and-Drop).
+            * Мощный язык формул DAX для финансовых агрегаций.
+Недостатки для данного проекта:
+            1. Лицензирование и Публикация: Для того чтобы поделиться интерактивным отчетом с внешним миром (рекрутерами, коллегами), требуется либо публикация в "Publish to Web" (что делает данные общедоступными и часто запрещено политиками безопасности), либо наличие лицензий Pro у всех зрителей. Это делает Power BI неудобным для персонального портфолио.21
+            2. Ограничения кастомизации: Построение сложных диаграмм, таких как Sankey или кастомные воронки с научной спецификой, в Power BI затруднено. Стандартные визуализации ограничены, а кастомные (из AppSource) часто платные или имеют ограниченный функционал.22
+            3. Обработка данных: Power Query (язык M) мощен, но проигрывает Python (Pandas) в гибкости парсинга сложных JSON структур API v2 и обработке естественного языка (NLP) для категоризации медицинских терминов.
+5.2. Python (Streamlit + Plotly): Выбор профессионала Data Science
+Преимущества:
+            * Streamlit: Позволяет превратить Python-скрипт в полноценное веб-приложение за часы. Это "Python-native" подход, идеальный для дата-сайентистов.
+            * Plotly: Библиотека визуализации, поддерживающая сложнейшие интерактивные графики (Sankey, 3D scatter plots, Sunburst) "из коробки" с полным контролем над каждым пикселем.23
+            * Портфолио: Приложение Streamlit легко деплоится бесплатно (Streamlit Cloud, Hugging Face) и доступно по прямой ссылке. Это демонстрирует навыки "Full Stack" — от сбора данных до фронтенда.22
+            * Гибкость: Возможность внедрения ML-моделей прямо в дашборд (например, прогнозирование даты завершения испытания) не требует переключения инструментов.
+Вердикт: Для проекта "GLP-1 Rush" Python + Streamlit + Plotly является безальтернативным выбором, обеспечивающим необходимую глубину анализа и качество презентации.
+________________
+6. Стратегия визуальной аналитики
+Цель визуализации — рассказать историю, превратить сухие строки таблицы ClinicalTrials.gov в понятные инсайты.
+6.1. Sankey Diagram: Карта потоков рынка
+Это "флагманская" визуализация проекта. Она должна отвечать на вопрос: «Куда инвестируют фармгиганты?».
+Структура диаграммы:
+            * Уровень 1 (Source): Фармацевтические компании (Novo Nordisk, Lilly, Pfizer, Amgen, Others).
+            * Уровень 2: Классы молекул (GLP-1 Mono, Dual Agonist, Triple Agonist, Oral Small Molecule).
+            * Уровень 3: Терапевтические области (Obesity, T2D, MASH, Alzheimer's).
+            * Уровень 4 (Target): Фазы исследований (Phase 1, 2, 3).
+Реализация в Plotly:
+Используется объект go.Sankey. Необходимо подготовить данные в формате source, target, value (количество испытаний). Цветовое кодирование потоков должно соответствовать корпоративным цветам компаний для лучшей читаемости. Это позволит мгновенно увидеть, например, что Lilly доминирует в сегменте "Triple Agonist", а Novo Nordisk массированно инвестирует в "Alzheimer's".24
+6.2. Funnel Chart: Воронка выживаемости («Долина смерти»)
+Фармацевтическая разработка — это воронка с высоким уровнем отсева.
+            * Концепция: Показать количество активных молекул на каждой стадии: Preclinical -> Phase 1 -> Phase 2 -> Phase 3 -> FDA Review -> Approved.
+            * Инсайт: Сравнение "крутизны" воронки для инъекционных пептидов и оральных малых молекул. Ожидается, что оральные препараты имеют более высокий отсев на ранних стадиях из-за токсичности (пример Pfizer с лотиглипроном).26
+            * Реализация: Использовать go.Funnel в Plotly. Можно добавить параметр textinfo="value+percent previous", чтобы показывать конверсию между стадиями.26
+6.3. Интерактивная хронология (Timeline/Gantt)
+Инвесторы и аналитики живут ожиданиями "катализаторов" — дат публикации результатов.
+            * Визуализация: Диаграмма Ганта, показывающая PrimaryCompletionDate для ключевых испытаний фазы 3 (например, ожидание результатов CagriSema REDEFINE 1 в 2025 году).
+            * Функционал: Цветовая кодировка по статусу (Recruiting, Active, Completed). Всплывающие подсказки (hover) с деталями исследования.
+________________
+7. План реализации и стратегия портфолио
+7.1. Дорожная карта (Implementation Roadmap)
+Для успешного завершения проекта рекомендуется придерживаться 5-недельного спринта.
+Неделя
+	Задача
+	Детали реализации
+	Неделя 1
+	Data Engineering
+	Изучение API v2. Написание скриптов на Python (requests) для выгрузки данных. Реализация пагинации и обработки ошибок. Сохранение сырых данных в JSON/CSV.
+	Неделя 2
+	Data Cleaning & NLP
+	Очистка данных в Pandas. Создание словарей синонимов для молекул. Извлечение механизмов действия из текстовых описаний. Классификация спонсоров.
+	Неделя 3
+	Analytics & Visuals
+	Разработка логики для Sankey и Funnel диаграмм в Plotly. Проверка гипотез (напр., рост доли MASH). Создание прототипов графиков в Jupyter Notebook.
+	Неделя 4
+	App Development
+	Сборка приложения на Streamlit. Создание интерфейса с фильтрами (Sidebar). Интеграция графиков. Добавление текстовых описаний и выводов.
+	Неделя 5
+	Deployment & Storytelling
+	Деплой на Streamlit Community Cloud. Оформление репозитория GitHub (README). Написание статьи-обзора на LinkedIn/Medium с аналитикой и ссылкой на проект.
+	7.2. Площадки для публикации портфолио
+Ваш проект должен быть видимым. Просто кода на GitHub недостаточно.
+            1. GitHub: База проекта. Обязательно наличие качественного README.md с описанием проблематики, стека технологий и инструкцией по запуску. Используйте бейджи (Python, Streamlit).27
+            2. Streamlit Community Cloud: Идеальная площадка для хостинга. Бесплатно, подключается к GitHub, обновляется автоматически при пуше кода. Позволяет дать живую ссылку на работающее приложение.22
+            3. Kaggle: Можно выложить очищенный датасет как "GLP-1 Clinical Trials Dataset" и создать Kaggle Notebook с EDA (Exploratory Data Analysis). Это привлечет внимание сообщества Data Science.27
+            4. LinkedIn / Medium: Напишите статью "Как я проанализировал рынок на $100 млрд с помощью Python". Опишите не код, а инсайты, которые вы нашли (например, "Почему Eli Lilly побеждает в гонке механизмов"). Вставьте скриншоты и ссылку на приложение. Это демонстрирует бизнес-мышление.27
+________________
+8. Заключение
+Проект "GLP-1 Rush" — это больше, чем упражнение в программировании. Это симуляция работы аналитика высокого уровня в одной из самых горячих областей мировой экономики. Сочетание глубокого понимания биомедицинских трендов (мульти-агонисты, расширение показаний на нейродегенерацию) с передовыми техническими навыками (API v2, Python, Streamlit) создаст уникальный кейс для портфолио.
+Реализация этого плана позволит не только продемонстрировать владение инструментарием, но и способность извлекать смысл из хаоса данных, что является ключевой компетенцией в современной аналитике. Рынок GLP-1 находится только в начале своего взрывного роста, и инструменты для его мониторинга будут востребованы как никогда.
+Works cited
+            1. What's next for GLP-1 innovation: A primer on the race reshaping pharma and chronic disease care - Union Healthcare Insight, accessed December 5, 2025, https://www.unionhealthcareinsight.com/post/glp-1-innovation-the-race-reshaping-pharma-and-chronic-disease-care
+            2. The Heavy Price of GLP-1 Drugs: How Financialization Drives Pharmaceutical Patent Abuse and Health Inequities for GLP-1 Therapies - I-MAK, accessed December 5, 2025, https://www.i-mak.org/glp-1/
+            3. 9 Promising Obesity Drugs Set to Launch by 2030 - DelveInsight, accessed December 5, 2025, https://www.delveinsight.com/blog/obesity-drugs-launch
+            4. The biggest obesity deals of 2025 so far | PharmaVoice, accessed December 5, 2025, https://www.pharmavoice.com/news/obesity-deals-roche-lilly-novo-ozempic-mounjaro-zealand/750079/
+            5. Novel GLP-1-based Medications for Type 2 Diabetes and Obesity - Oxford Academic, accessed December 5, 2025, https://academic.oup.com/edrv/advance-article/doi/10.1210/endrev/bnaf036/8276515?searchresult=1
+            6. 5 Projected GLP-1 Trends in 2025 - GoodRx, accessed December 5, 2025, https://www.goodrx.com/classes/glp-1-agonists/glp-1-trends
+            7. Beyond GLP-1: the next wave of weight-loss medication innovation, accessed December 5, 2025, https://pharmaceutical-journal.com/article/feature/beyond-glp-1-the-next-wave-of-weight-loss-medication-innovation
+            8. Outlook for obesity in 2025: more than a transition year - IQVIA, accessed December 5, 2025, https://www.iqvia.com/locations/emea/blogs/2025/01/outlook-for-obesity-in-2025-more-than-a-transition-year
+            9. Six biotech companies that could revolutionize obesity treatments - Labiotech.eu, accessed December 5, 2025, https://www.labiotech.eu/best-biotech/biotech-companies-revolutionize-obesity-treatments/
+            10. 2 Companies Poised to Capitalize on the Rise of GLP-1 Drugs - Morningstar, accessed December 5, 2025, https://www.morningstar.com/sustainable-investing/2-companies-poised-capitalize-rise-glp-1-drugs
+            11. GLP-1 Pipeline Update: August 2025 - Prime Therapeutics - Portal, accessed December 5, 2025, https://www.primetherapeutics.com/glp-1-pipeline-update-august-2025
+            12. Effects of Resmetirom on Metabolic-Dysfunction Associated Steatohepatitis in Patients With Weight Loss and/or Diabetes Taking Glucagon-Like Peptide-1 Receptor Agonists and Other Diabetes Therapies: A Secondary Analysis of the MAESTRO-NASH Trial - PubMed, accessed December 5, 2025, https://pubmed.ncbi.nlm.nih.gov/41127972/
+            13. Comparative Analysis of Resmetirom vs. FGF21 Analogs vs. GLP-1 Agonists in MASLD and MASH: Network Meta-Analysis of Clinical Trials - MDPI, accessed December 5, 2025, https://www.mdpi.com/2227-9059/12/10/2328
+            14. How GLP-1s Could Transform Alzheimer's Treatment - BrightFocus Foundation, accessed December 5, 2025, https://www.brightfocus.org/resource/how-glp-1s-could-transform-alzheimers-treatment/
+            15. Weight Loss Drugs May Protect Against Alzheimer's, accessed December 5, 2025, https://www.alzinfo.org/articles/treatment/weight-loss-drugs-may-protect-against-alzheimers/
+            16. Glucagon-like peptide-1 receptor agonists for major neurocognitive disorders | Journal of Neurology, Neurosurgery & Psychiatry, accessed December 5, 2025, https://jnnp.bmj.com/content/96/9/870
+            17. GLP-1 Pipeline Update: February 2025 - Prime Therapeutics - Portal, accessed December 5, 2025, https://www.primetherapeutics.com/glp-1-pipeline-update-february-2025
+            18. ClinicalTrials.gov API Version 2.0 Now Available - National Library of Medicine - NIH, accessed December 5, 2025, https://www.nlm.nih.gov/pubs/techbull/ma24/ma24_clinicaltrials_api.html
+            19. How to get full results with clinicalTrials.gov API in Python? - Stack Overflow, accessed December 5, 2025, https://stackoverflow.com/questions/78415818/how-to-get-full-results-with-clinicaltrials-gov-api-in-python
+            20. Study Data Structure | ClinicalTrials.gov, accessed December 5, 2025, https://clinicaltrials.gov/data-api/about-api/study-data-structure
+            21. Moving from PowerBI to Streamlit (Open source Solutions) - Reddit, accessed December 5, 2025, https://www.reddit.com/r/PowerBI/comments/1mbrbo0/moving_from_powerbi_to_streamlit_open_source/
+            22. Maximizing Data Analysis Efficiency: When to Use Power BI vs. Streamlit - ProCogia, accessed December 5, 2025, https://procogia.com/when-to-use-power-bi-vs-streamlit/
+            23. Create a Stunning Sankey diagrams in Python with Plotly - YouTube, accessed December 5, 2025, https://www.youtube.com/watch?v=1aPAYcKV-S4
+            24. Sankey diagram in Python - Plotly, accessed December 5, 2025, https://plotly.com/python/sankey-diagram/
+            25. Sankey Diagram using Plotly in Python - GeeksforGeeks, accessed December 5, 2025, https://www.geeksforgeeks.org/python/sankey-diagram-using-plotly-in-python/
+            26. Funnel chart in Python - Plotly, accessed December 5, 2025, https://plotly.com/python/funnel-charts/
+            27. 5 Places to Host Your Data Science Portfolio - DataCamp, accessed December 5, 2025, https://www.datacamp.com/blog/5-places-to-host-your-data-science-portfolio
+            28. Create your online Streamlit Data and AI Projects web Portfolio ‍ — with Python — (FOR FREE!! ) | by Enric Domingo - Medium, accessed December 5, 2025, https://medium.com/@enricdomingo/create-your-data-ai-web-app-portfolio-with-streamlit-python-step-by-step-guide-f82fcd7dea95
+            29. Top 5 Platforms to Showcase Your Data Science Portfolio Online - CertLibrary Blog, accessed December 5, 2025, https://www.certlibrary.com/blog/top-5-platforms-to-showcase-your-data-science-portfolio-online/
